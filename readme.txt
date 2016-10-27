@@ -1,5 +1,7 @@
 built against u-boot-xlnx tagged version "xilinx-v2015.2"
 
+make distclean
+
 make zynq_rc_config
 
 compile with
