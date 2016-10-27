@@ -1,0 +1,23 @@
+#ifndef __CONFIG_ZYNQ_RC_H
+#define __CONFIG_ZYNQ_RC_H
+
+#define CONFIG_SYS_SDRAM_SIZE		(1024 * 1024 * 1024)
+
+#define CONFIG_ZYNQ_SERIAL_UART1
+#define CONFIG_ZYNQ_GEM0
+#define CONFIG_ZYNQ_GEM_PHY_ADDR0	7
+
+#define CONFIG_SYS_NO_FLASH
+
+#define CONFIG_ZYNQ_SDHCI0
+#define CONFIG_ZYNQ_SDHCI1
+#define CONFIG_ZYNQ_USB
+#define CONFIG_ZYNQ_QSPI
+#define CONFIG_ZYNQ_I2C0
+#define CONFIG_ZYNQ_EEPROM
+#define CONFIG_ZYNQ_BOOT_FREEBSD
+#define CONFIG_DEFAULT_DEVICE_TREE	zynq-zc702
+
+#include <configs/zynq-common.h>
+
+#endif /* __CONFIG_ZYNQ_RC_H */
