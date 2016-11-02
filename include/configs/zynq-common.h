@@ -283,48 +283,77 @@
 		"echo Copying ramdisk... && " \
 		"cp.b 0xE2620000 ${ramdisk_load_address} ${ramdisk_size} && " \
 		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
-	"rdms_1u_init=" \
-		"echo Resetting USB Hub, PHY and ENET PHY... && " \
-	        "mw.l 0x43c07000 0x0E0000 && " \
-	        "echo Set FP to configure from qspi... && "	\
-	        "mw.l 0x83C01000 0x0 && "				\
-	        "echo Lower FP prog_b... && "					\
-	        "mw.l 0x83C01004 0x0 && "                   \
-	        "sleep 1 &&" \
-		"echo Releasing USB PHY reset... && " \
-	        "mw.l 0x43c07000 0x0C0000 && " \
-	        "echo Raise FP prog_b to start configuration... && "	\
-	        "mw.l 0x83C01004 0x4 && "					\
-	        "sleep 1 &&" \
-		"echo Releasing USB HUB, ENET PHY reset... && " \
-	        "mw.l 0x43c07000 0x180000 && " \
-	        "sleep 1 &&" \
-		"\0" \
-	"env_init=echo run env_init... && " \
-                "mw.b 0x2100000 0 1 && " \
-                "mw.b 0x2100001 1 1 && " \
-                "mw.b 0x2100002 2 1 && " \
-                "mw.b 0x2100003 3 1 && " \
-                "mw.b 0x2100004 4 1 && " \
-	        "setenv rack_size \"unknown\" && setenv lcd_rev \"unknown\" &&  " \
-                "if cmp.b 0x2000000 0x2100001 1; then setenv rack_size \"1\"; fi; " \
-	        "if cmp.b 0x2000000 0x2100002 1; then setenv rack_size \"3\"; fi; " \
-                "if cmp.b 0x2000001 0x2100001 1; then setenv lcd_rev \"1\"; fi; " \
-                "if cmp.b 0x2000001 0x2100002 1; then setenv lcd_rev \"2\"; fi; && \0" \
-	"qspiboot=echo QSPI boot... && " \
-	        "echo Reading env.bin... && if fatload mmc 1 0x2000000 env.bin 2; then " \
-	        "run env_init; fi; " \
-	        "mw.l 0x43c07004 0x00 && "					\
-		"if test \"${lcd_rev}\" = \"1\"; then echo LCD rev.1; if test \"${rack_size}\" = \"3\"; then mw.l 0x43c07004 0x06; echo 3U; else echo 1U; mw.l 0x43c07004 0x04; fi; fi;  && "  \
-		"if test \"${lcd_rev}\" = \"2\"; then echo LCD rev.2; if test \"${rack_size}\" = \"3\"; then mw.l 0x43c07004 0x07; echo 3U; else echo 1U; mw.l 0x43c07004 0x05; fi; fi;  && " \
-	        "fatload mmc 1 0x2300000 uboot_config.bin && " \
-	        "source 0x2300000 && " \
+	"rdms_init=" \
+        "echo Resetting USB Hub, PHY and ENET PHY... && " \
+            "mw.l 0x43c07000 0x0E0000 && " \
+            "echo Set FP to configure from qspi... && "	\
+            "mw.l 0x83C01000 0x0 && "				\
+            "echo Lower FP prog_b... && "					\
+            "mw.l 0x83C01004 0x0 && "                   \
+            "sleep 1 &&" \
+        "echo Releasing USB PHY reset... && " \
+            "mw.l 0x43c07000 0x0C0000 && " \
+            "echo Raise FP prog_b to start configuration... && "	\
+            "mw.l 0x83C01004 0x4 && "					\
+            "sleep 1 &&" \
+        "echo Releasing USB HUB, ENET PHY reset... && " \
+            "mw.l 0x43c07000 0x180000 && " \
+            "sleep 1 &&" \
+        "\0" \
+    "env_init=	 echo running env_init... && " \
+                "setenv rack_size unknown && setenv lcd_rev unknown &&  " \
+                "if itest.b *0x2000000 == 1; then setenv rack_size 1; fi; " \
+                "if itest.b *0x2000000 == 2; then setenv rack_size 3; fi; " \
+                "if itest.b *0x2000001 == 1; then setenv lcd_rev 1; fi; " \
+                "if itest.b *0x2000001 == 2; then setenv lcd_rev 2; fi; \0" \
+    "rcboot=     " \
+                "echo Running rcboot... &&" \
+                "echo Reading env.bin... && " \
+                "if fatload mmc 1 0x2000000 env.bin 2; then " \
+                    "run env_init; " \
+                "elif fatload mmc 0 0x2000000 env.bin 2; then " \
+                    "run env_init; " \
+                "fi; " \
+                "mw.l 0x43c07004 0x00 && " \
+                "if test ${lcd_rev} = 1; then " \
+                    "echo LCD rev.1; " \
+                    "if test ${rack_size} = 3; then " \
+                        "mw.l 0x43c07004 0x06; " \
+                        "echo 3U; " \
+                    "else " \
+                        "mw.l 0x43c07004 0x04; " \
+                        "echo 1U; " \
+                    "fi; " \
+                "elif test ${lcd_rev} = 2; then " \
+                    "echo LCD rev.2; " \
+                    "if test ${rack_size} = 3; then " \
+                        "mw.l 0x43c07004 0x07; " \
+                        "echo 3U; " \
+                    "else " \
+                        "mw.l 0x43c07004 0x05; " \
+                        "echo 1U; " \
+                    "fi; " \
+                "fi;  && "  \
+                "fatload mmc ${mmcsel} 0x2300000 uboot_config.bin && " \
+                "source 0x2300000 && " \
                 "echo Copying Linux from SD to RAM... && " \
-	        "if test \"${rack_size}\" = \"1\"; then devicetree_image=devicetree.dtb.1u; else devicetree_image=devicetree.dtb.3u; fi; && "				\
-                "fatload mmc 1 0x3000000 ${kernel_image} && "				\
-	        "fatload mmc 1 0x2A00000 ${devicetree_image} && "		\
-                "run rdms_1u_init; " \
-		"bootm 0x3000000 - 0x2A00000 \0" \
+                "if test ${rack_size} = 1; then devicetree_image=devicetree.dtb.1u; else devicetree_image=devicetree.dtb.3u; fi; && " \
+                "fatload mmc ${mmcsel} 0x3000000 ${kernel_image} && " \
+                "fatload mmc ${mmcsel} 0x2A00000 ${devicetree_image} && " \
+                "run rdms_init && " \
+                "echo Booting... &&" \
+                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootmmc} rw earlyprintk ipv6.disable=1 consoleblank=0 rootwait; &&" \
+                "echo   ${bootargs} && " \
+                "bootm 0x3000000 - 0x2A00000" \
+                "\0" \
+    "qspiboot=   echo QSPI boot... && " \
+                "mmcsel=1 && " \
+                "rootmmc=/dev/mmcblk1p2 && " \
+                "run rcboot \0" \
+    "sdboot=     echo SD boot... && " \
+                "mmcsel=0 && " \
+                "rootmmc=/dev/mmcblk0p2 && " \
+                "run rcboot \0" \
 	"uenvboot=" \
 		"if run loadbootenv; then " \
 			"echo Loaded environment from ${bootenv}; " \
@@ -333,22 +362,6 @@
 		"if test -n $uenvcmd; then " \
 			"echo Running uenvcmd ...; " \
 			"run uenvcmd; " \
-		"fi\0" \
-	"sdboot=echo SD boot... && " \
-	        "mmcinfo && echo Reading env.bin... && if fatload mmc 0 0x2000000 env.bin 2; then " \
-	        "run env_init; fi; " \
-	        "mw.l 0x43c07004 0x00 && "					\
-		"if test \"${lcd_rev}\" = \"1\"; then echo LCD rev.1; if test \"${rack_size}\" = \"3\"; then mw.l 0x43c07004 0x06; echo 3U; else echo 1U; mw.l 0x43c07004 0x04; fi; fi;  && "  \
-		"if test \"${lcd_rev}\" = \"2\"; then echo LCD rev.2; if test \"${rack_size}\" = \"3\"; then mw.l 0x43c07004 0x07; echo 3U; else echo 1U; mw.l 0x43c07004 0x05; fi; fi;  && " \
-                "if mmcinfo; then "			\
-	        "fatload mmc 0 0x2300000 uboot_config.bin && " \
-	        "source 0x2300000 && " \
-		"echo Copying Linux from SD to RAM... && " \
-	        "if test \"${rack_size}\" = \"1\"; then devicetree_image=devicetree.dtb.1u; else devicetree_image=devicetree.dtb.3u; fi; && "				\
-		"fatload mmc 0 0x3000000 ${kernel_image} && " \
-		"fatload mmc 0 0x2A00000 ${devicetree_image} && " \
-	        "run rdms_1u_init; " \
-		"bootm 0x3000000 - 0x2A00000; " \
 		"fi\0" \
 	"usbboot=if usb start; then " \
 			"run uenvboot; " \
