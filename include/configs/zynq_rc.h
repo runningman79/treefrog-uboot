@@ -19,6 +19,7 @@
 #define CONFIG_DEFAULT_DEVICE_TREE	zynq-zc702
 
 #define CONFIG_CMD_SETEXPR
+#define CONFIG_CMD_STRSTR	/* STRSTR utility			*/
 
 #include <configs/zynq-common.h>
 

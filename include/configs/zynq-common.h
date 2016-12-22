@@ -300,37 +300,38 @@
             "mw.l 0x43c07000 0x180000 && " \
             "sleep 1 &&" \
         "\0" \
-    "env_init=	 echo running env_init... && " \
-                "setenv rack_size unknown && setenv lcd_rev unknown &&  " \
-                "if itest.b *0x2000000 == 1; then setenv rack_size 1; fi; " \
-                "if itest.b *0x2000000 == 2; then setenv rack_size 3; fi; " \
-                "if itest.b *0x2000001 == 1; then setenv lcd_rev 1; fi; " \
-                "if itest.b *0x2000001 == 2; then setenv lcd_rev 2; fi; \0" \
+    "unit_init=	 echo running unit_init... && " \
+                "if strstr 0x2000000 1000 size,1u found_loc; then setenv rack_size 1; " \
+                    "elif strstr 0x2000000 1000 size,3u found_loc; then setenv rack_size 3; fi; " \
+                "if strstr 0x2000000 1000 lcd_rev,1 found_loc; then setenv lcd_rev 1; " \
+                    "elif strstr 0x2000000 1000 lcd_rev,2 found_loc; then setenv lcd_rev 2; fi; \0" \
     "rcboot=     " \
                 "echo Running rcboot... &&" \
-                "echo Reading env.bin... && " \
-                "if fatload mmc 1 0x2000000 env.bin 2; then " \
-                    "run env_init; " \
-                "elif fatload mmc 0 0x2000000 env.bin 2; then " \
-                    "run env_init; " \
+                "echo Reading unit.txt... && " \
+                "mw.b 0x2000000 0 1000; "\
+                "setenv rack_size unknown; setenv lcd_rev unknown; " \
+                "if ext4load mmc 1:3 0x2000000 unit.txt; then " \
+                    "run unit_init; " \
+                "elif ext4load mmc 0:3 0x2000000 unit.txt; then " \
+                    "run unit_init; " \
                 "fi; " \
                 "mw.l 0x43c07004 0x00 && " \
-                "if test ${lcd_rev} = 1; then " \
-                    "echo LCD rev.1; " \
-                    "if test ${rack_size} = 3; then " \
-                        "mw.l 0x43c07004 0x06; " \
-                        "echo 3U; " \
-                    "else " \
-                        "mw.l 0x43c07004 0x04; " \
-                        "echo 1U; " \
-                    "fi; " \
-                "elif test ${lcd_rev} = 2; then " \
+                "if test ${lcd_rev} = 2; then " \
                     "echo LCD rev.2; " \
                     "if test ${rack_size} = 3; then " \
                         "mw.l 0x43c07004 0x07; " \
                         "echo 3U; " \
                     "else " \
                         "mw.l 0x43c07004 0x05; " \
+                        "echo 1U; " \
+                    "fi; " \
+                "else " \
+                    "echo LCD rev.1; " \
+                    "if test ${rack_size} = 3; then " \
+                        "mw.l 0x43c07004 0x06; " \
+                        "echo 3U; " \
+                    "else " \
+                        "mw.l 0x43c07004 0x04; " \
                         "echo 1U; " \
                     "fi; " \
                 "fi;  && "  \

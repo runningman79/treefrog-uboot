@@ -216,6 +216,8 @@ obj-$(CONFIG_CMD_DFU) += cmd_dfu.o
 obj-$(CONFIG_CMD_GPT) += cmd_gpt.o
 endif
 
+obj-$(CONFIG_CMD_STRSTR) += cmd_strstr.o
+
 ifdef CONFIG_SPL_BUILD
 obj-$(CONFIG_ENV_IS_IN_FLASH) += env_flash.o
 obj-$(CONFIG_SPL_YMODEM_SUPPORT) += xyzModem.o
