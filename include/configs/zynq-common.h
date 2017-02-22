@@ -349,7 +349,7 @@
                 "\0" \
     "qspiboot=   echo QSPI boot... && " \
                 "mmcsel=1 && " \
-                "rootmmc=/dev/mmcblk1p2 && " \
+                "rootmmc=/dev/mmcblk0p2 && " \
                 "run rcboot \0" \
     "sdboot=     echo SD boot... && " \
                 "mmcsel=0 && " \
