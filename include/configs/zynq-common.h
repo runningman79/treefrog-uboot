@@ -310,9 +310,9 @@
                 "echo Reading unit.txt... && " \
                 "mw.b 0x2000000 0 1000; "\
                 "setenv rack_size unknown; setenv lcd_rev unknown; " \
-                "if ext4load mmc 1:3 0x2000000 unit.txt; then " \
+                "if ext4load mmc 1:6 0x2000000 unit.txt; then " \
                     "run unit_init; " \
-                "elif ext4load mmc 0:3 0x2000000 unit.txt; then " \
+                "elif ext4load mmc 0:6 0x2000000 unit.txt; then " \
                     "run unit_init; " \
                 "fi; " \
                 "mw.l 0x43c07004 0x00 && " \
@@ -347,9 +347,9 @@
                 "echo   ${bootargs} && " \
                 "bootm 0x3000000 - 0x2A00000" \
                 "\0" \
-    "qspiboot=   echo QSPI boot... && " \
+    "qspiboot=   echo QSPI boot 2017/03/09 ... && " \
                 "mmcsel=1 && " \
-                "rootmmc=/dev/mmcblk0p2 && " \
+                "rootmmc=/dev/mmcblk1p2 && " \
                 "run rcboot \0" \
     "sdboot=     echo SD boot... && " \
                 "mmcsel=0 && " \
