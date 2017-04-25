@@ -337,23 +337,43 @@
                 "fi;  && "  \
                 "fatload mmc ${mmcsel} 0x2300000 uboot_config.bin && " \
                 "source 0x2300000 && " \
+                "if test -e mmc ${mmcsel} BOOTING1; then " \
+                    "echo Found BOOTING1; " \
+                    "setenv rootfs ${rootmmc}p2; " \
+                    "setenv devtree_image_1u devicetree.dtb.1u.1; " \
+                    "setenv devtree_image_3u devicetree.dtb.3u.1; " \
+                    "setenv kernel_image uImage.1; " \
+                "elif test -e mmc ${mmcsel} BOOTING2; then " \
+                    "echo Found BOOTING2; " \
+                    "setenv rootfs ${rootmmc}p3; " \
+                    "setenv devtree_image_1u devicetree.dtb.1u.2; " \
+                    "setenv devtree_image_3u devicetree.dtb.3u.2; " \
+                    "setenv kernel_image uImage.2; " \
+                "else " \
+                    "echo Found no BOOTING1 or BOOTING2; " \
+                    "setenv rootfs ${rootmmc}p5; " \
+                    "setenv devtree_image_1u devicetree.dtb.1u.3; " \
+                    "setenv devtree_image_3u devicetree.dtb.3u.3; " \
+                    "setenv kernel_image uImage.3; " \
+                "fi; && " \
                 "echo Copying Linux from SD to RAM... && " \
-                "if test ${rack_size} = 1; then devicetree_image=devicetree.dtb.1u; else devicetree_image=devicetree.dtb.3u; fi; && " \
+                "if test ${rack_size} = 1; then setenv devicetree_image ${devtree_image_1u}; else setenv devicetree_image ${devtree_image_3u}; fi; && " \
+                "echo Using ${devicetree_image} and ${kernel_image} &&" \
                 "fatload mmc ${mmcsel} 0x3000000 ${kernel_image} && " \
                 "fatload mmc ${mmcsel} 0x2A00000 ${devicetree_image} && " \
                 "run rdms_init && " \
-                "echo Booting... &&" \
-                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootmmc} rw earlyprintk ipv6.disable=1 consoleblank=0 rootwait; &&" \
+                "echo Booting... && " \
+                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootfs} rw earlyprintk ipv6.disable=1 consoleblank=0 rootwait; &&" \
                 "echo   ${bootargs} && " \
                 "bootm 0x3000000 - 0x2A00000" \
                 "\0" \
     "qspiboot=   echo QSPI boot 2017/03/09 ... && " \
-                "mmcsel=1 && " \
-                "rootmmc=/dev/mmcblk1p2 && " \
+                "setenv mmcsel 1 && " \
+                "setenv rootmmc /dev/mmcblk1 && " \
                 "run rcboot \0" \
     "sdboot=     echo SD boot... && " \
-                "mmcsel=0 && " \
-                "rootmmc=/dev/mmcblk0p2 && " \
+                "setenv mmcsel 0 && " \
+                "setenv rootmmc /dev/mmcblk0 && " \
                 "run rcboot \0" \
 	"uenvboot=" \
 		"if run loadbootenv; then " \
