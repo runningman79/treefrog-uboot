@@ -286,19 +286,32 @@
 	"rdms_init=" \
         "echo Resetting USB Hub, PHY and ENET PHY... && " \
             "mw.l 0x43c07000 0x0E0000 && " \
-            "echo Set FP to configure from qspi... && "	\
+        "echo Set FP to configure from qspi... && "	\
             "mw.l 0x83C01000 0x0 && "				\
-            "echo Lower FP prog_b... && "					\
+        "echo Lower FP prog_b... && "					\
             "mw.l 0x83C01004 0x0 && "                   \
-            "sleep 1 &&" \
+        "sleep 1 &&" \
         "echo Releasing USB PHY reset... && " \
             "mw.l 0x43c07000 0x0C0000 && " \
-            "echo Raise FP prog_b to start configuration... && "	\
+        "echo Raise FP prog_b to start configuration... && "	\
             "mw.l 0x83C01004 0x4 && "					\
-            "sleep 1 &&" \
+        "sleep 1 &&" \
         "echo Releasing USB HUB, ENET PHY reset... && " \
             "mw.l 0x43c07000 0x180000 && " \
-            "sleep 1 &&" \
+        "echo Checking for -CS Option in unit/part_number.txt... && " \
+        "mw.b 0x2000000 0 1000 && "\
+        "if ext4load mmc ${mmcsel}:3 0x2000000 part_number.txt; then " \
+            "if strstr 0x2000000 1000 -CS found_loc; then " \
+                "echo Found -CS option, disable USB && " \
+                "mw.l 0x43c07000 0x100000 && " \
+            "fi; " \
+            "if strstr 0x2000000 1000 -cs found_loc; then " \
+                "echo Found -cs option, disable USB && " \
+                "mw.l 0x43c07000 0x100000 && " \
+            "fi; " \
+            "md.w 0x2000000 && " \
+        "fi; " \
+        "sleep 1 &&" \
         "\0" \
     "unit_init=	 echo running unit_init... && " \
                 "if strstr 0x2000000 1000 size,1u found_loc; then setenv rack_size 1; " \
