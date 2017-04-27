@@ -296,20 +296,24 @@
         "echo Raise FP prog_b to start configuration... && "	\
             "mw.l 0x83C01004 0x4 && "					\
         "sleep 1 &&" \
-        "echo Releasing USB HUB, ENET PHY reset... && " \
-            "mw.l 0x43c07000 0x180000 && " \
+        "echo Releasing ENET PHY reset... && " \
+            "mw.l 0x43c07000 0x100000 && " \
         "echo Checking for -CS Option in unit/part_number.txt... && " \
         "mw.b 0x2000000 0 1000 && "\
         "if ext4load mmc ${mmcsel}:3 0x2000000 part_number.txt; then " \
+            "echo Found part_number.txt && " \
+            "md.w 0x2000000 && " \
             "if strstr 0x2000000 1000 -CS found_loc; then " \
                 "echo Found -CS option, disable USB && " \
-                "mw.l 0x43c07000 0x100000 && " \
-            "fi; " \
-            "if strstr 0x2000000 1000 -cs found_loc; then " \
+            "elif strstr 0x2000000 1000 -cs found_loc; then " \
                 "echo Found -cs option, disable USB && " \
-                "mw.l 0x43c07000 0x100000 && " \
+            "else " \
+                "echo No CS option - enable USB && " \
+                "mw.l 0x43c07000 0x180000 && " \
             "fi; " \
-            "md.w 0x2000000 && " \
+        "else " \
+            "echo Did not find part_number.txt, enable USB && " \
+            "mw.l 0x43c07000 0x180000 && " \
         "fi; " \
         "sleep 1 &&" \
         "\0" \
