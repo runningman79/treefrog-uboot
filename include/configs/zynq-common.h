@@ -310,9 +310,9 @@
                 "echo Reading unit.txt... && " \
                 "mw.b 0x2000000 0 1000; "\
                 "setenv rack_size unknown; setenv lcd_rev unknown; " \
-                "if ext4load mmc 1:3 0x2000000 unit.txt; then " \
+                "if ext4load mmc 1:6 0x2000000 unit.txt; then " \
                     "run unit_init; " \
-                "elif ext4load mmc 1:6 0x2000000 unit.txt; then " \
+                "elif ext4load mmc 1:3 0x2000000 unit.txt; then " \
                     "run unit_init; " \
                 "elif ext4load mmc 0:6 0x2000000 unit.txt; then " \
                     "run unit_init; " \
