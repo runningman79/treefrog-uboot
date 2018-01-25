@@ -365,7 +365,7 @@
                 "fatload mmc ${mmcsel} 0x2A00000 ${devicetree_image} && " \
                 "run rdms_init && " \
                 "echo Booting... && " \
-                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootfs} rw earlyprintk ipv6.disable=1 consoleblank=0 rootwait; &&" \
+                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootfs} rw earlyprintk ipv6.disable=1 consoleblank=0 panic=5 rootwait; &&" \
                 "echo   ${bootargs} && " \
                 "bootm 0x3000000 - 0x2A00000" \
                 "\0" \
