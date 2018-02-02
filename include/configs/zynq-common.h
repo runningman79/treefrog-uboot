@@ -369,13 +369,14 @@
                 "echo   ${bootargs} && " \
                 "bootm 0x3000000 - 0x2A00000" \
                 "\0" \
-    "qspiboot=   echo QSPI boot 2017/03/09 ... && " \
+    "qspiboot=   echo QSPI boot 2018/02/02 ... && " \
                 "setenv mmcsel 1 && " \
                 "setenv rootmmc /dev/mmcblk1 && " \
                 "run rcboot \0" \
     "sdboot=     echo SD boot... && " \
                 "setenv mmcsel 0 && " \
                 "setenv rootmmc /dev/mmcblk0 && " \
+                "sf probe 0; " \
                 "run rcboot \0" \
 	"uenvboot=" \
 		"if run loadbootenv; then " \
