@@ -306,17 +306,24 @@
                 "if strstr 0x2000000 1000 lcd_rev,1 found_loc; then setenv lcd_rev 1; " \
                     "elif strstr 0x2000000 1000 lcd_rev,2 found_loc; then setenv lcd_rev 2; fi; \0" \
     "rcboot=     " \
-                "echo Running rcboot... &&" \
+                "echo Running rcboot... && " \
                 "echo Reading unit.txt... && " \
                 "mw.b 0x2000000 0 1000; "\
                 "setenv rack_size unknown; setenv lcd_rev unknown; " \
                 "if ext4load mmc 1:6 0x2000000 unit.txt; then " \
+                    "echo Found unit.txt in 1:6 ... && " \
                     "run unit_init; " \
                 "elif ext4load mmc 1:3 0x2000000 unit.txt; then " \
+                    "echo Found unit.txt in 1:3 ... && " \
+                    "run unit_init; " \
+                "elif fatload mmc 1 0x2000000 backup/unit.txt; then " \
+                    "echo Found unit.txt in boot backup ... && " \
                     "run unit_init; " \
                 "elif ext4load mmc 0:6 0x2000000 unit.txt; then " \
+                    "echo Found unit.txt in 0:6... && " \
                     "run unit_init; " \
                 "fi; " \
+                "echo found size ${rack_size}, rev ${lcd_rev} && " \
                 "mw.l 0x43c07004 0x00 && " \
                 "if test ${lcd_rev} = 2; then " \
                     "echo LCD rev.2; " \
@@ -360,7 +367,7 @@
                 "fi; && " \
                 "echo Copying Linux from SD to RAM... && " \
                 "if test ${rack_size} = 1; then setenv devicetree_image ${devtree_image_1u}; else setenv devicetree_image ${devtree_image_3u}; fi; && " \
-                "echo Using ${devicetree_image} and ${kernel_image} &&" \
+                "echo Using ${devicetree_image} and ${kernel_image} && " \
                 "fatload mmc ${mmcsel} 0x3000000 ${kernel_image} && " \
                 "fatload mmc ${mmcsel} 0x2A00000 ${devicetree_image} && " \
                 "run rdms_init && " \
@@ -369,11 +376,11 @@
                 "echo   ${bootargs} && " \
                 "bootm 0x3000000 - 0x2A00000" \
                 "\0" \
-    "qspiboot=   echo QSPI boot 2018/02/02 ... && " \
+    "qspiboot=   echo QSPI boot 2018/03/07 ... && " \
                 "setenv mmcsel 1 && " \
                 "setenv rootmmc /dev/mmcblk1 && " \
                 "run rcboot \0" \
-    "sdboot=     echo SD boot... && " \
+    "sdboot=     echo SD boot 2018/03/07 ... && " \
                 "setenv mmcsel 0 && " \
                 "setenv rootmmc /dev/mmcblk0 && " \
                 "sf probe 0; " \
