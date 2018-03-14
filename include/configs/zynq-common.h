@@ -360,10 +360,19 @@
                     "setenv kernel_image uImage.2; " \
                 "else " \
                     "echo Found no BOOTING1 or BOOTING2; " \
-                    "setenv rootfs ${rootmmc}p5; " \
-                    "setenv devtree_image_1u devicetree.dtb.1u.3; " \
-                    "setenv devtree_image_3u devicetree.dtb.3u.3; " \
-                    "setenv kernel_image uImage.3; " \
+                    "if test ${mmcsel} = 0; then " \
+                        "echo Booted external, presume fwup card, no recovery; " \
+                        "setenv rootfs ${rootmmc}p2; " \
+                        "setenv devtree_image_1u devicetree.dtb.1u.1; " \
+                        "setenv devtree_image_3u devicetree.dtb.3u.1; " \
+                        "setenv kernel_image uImage.1; " \
+                    "else " \
+                        "echo Booted internal, go to recovery; " \
+                        "setenv rootfs ${rootmmc}p5; " \
+                        "setenv devtree_image_1u devicetree.dtb.1u.3; " \
+                        "setenv devtree_image_3u devicetree.dtb.3u.3; " \
+                        "setenv kernel_image uImage.3; " \
+                    "fi; " \
                 "fi; && " \
                 "echo Copying Linux from SD to RAM... && " \
                 "if test ${rack_size} = 1; then setenv devicetree_image ${devtree_image_1u}; else setenv devicetree_image ${devtree_image_3u}; fi; && " \
