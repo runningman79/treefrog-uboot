@@ -296,10 +296,26 @@
             "echo Raise FP prog_b to start configuration... && "	\
             "mw.l 0x83C01004 0x4 && "					\
             "sleep 1 &&" \
-        "echo Releasing USB HUB, ENET PHY reset... && " \
-            "mw.l 0x43c07000 0x180000 && " \
-            "sleep 1 &&" \
-        "\0" \
+        "echo Releasing ENET PHY reset... && "\
+            "mw.l 0x43c07000 0x100000 && "\
+        "echo Checking for -CS Option in unit/part_number.txt... && "\
+            "mw.b 0x2000000 0 1000 && "\
+            "if ext4load mmc ${mmcsel}:6 0x2000000 part_number.txt; then "\
+                "echo Found part_number.txt && "\
+                "md.w 0x2000000 && "\
+                "if strstr 0x2000000 1000 -CS found_loc; then "\
+                    "echo Found -CS option, disable USB; "\
+                "elif strstr 0x2000000 1000 -cs found_loc; then "\
+                    "echo Found -cs option, disable USB; "\
+                "else "\
+                    "echo No CS option - enable USB && "\
+                    "mw.l 0x43c07000 0x180000; "\
+                "fi; "\
+            "else "\
+                "echo Did not find part_number.txt, enable USB && "\
+                "mw.l 0x43c07000 0x180000; "\
+            "fi; "\
+            "sleep 1; \0" \
     "unit_init=	 echo running unit_init... && " \
                 "if strstr 0x2000000 1000 size,1u found_loc; then setenv rack_size 1; " \
                     "elif strstr 0x2000000 1000 size,3u found_loc; then setenv rack_size 3; fi; " \
@@ -385,11 +401,11 @@
                 "echo   ${bootargs} && " \
                 "bootm 0x3000000 - 0x2A00000" \
                 "\0" \
-    "qspiboot=   echo QSPI boot 2018/03/07 ... && " \
+    "qspiboot=   echo QSPI boot 2018/03/29 ... && " \
                 "setenv mmcsel 1 && " \
                 "setenv rootmmc /dev/mmcblk1 && " \
                 "run rcboot \0" \
-    "sdboot=     echo SD boot 2018/03/07 ... && " \
+    "sdboot=     echo SD boot 2018/03/29 ... && " \
                 "setenv mmcsel 0 && " \
                 "setenv rootmmc /dev/mmcblk0 && " \
                 "sf probe 0; " \
