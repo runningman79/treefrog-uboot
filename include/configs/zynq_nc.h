@@ -22,7 +22,7 @@
 
 // zynq-7000 rack controller board 0
 // zynq-7000 node controller board 1
-#define QUASONIX_BOARD_TYPE 0
+#define QUASONIX_BOARD_TYPE 1
 
 #include <configs/zynq-common.h>
 
@@ -31,5 +31,7 @@
 #define CONFIG_SYS_MEMTEST_START	CONFIG_SYS_SDRAM_BASE
 #define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_SDRAM_BASE + CONFIG_SYS_SDRAM_SIZE - 4)
 #define CONFIG_SYS_MEMTEST_SCRATCH  (CONFIG_SYS_MEMTEST_END - 4)
+
+
 
 #endif /* __CONFIG_ZYNQ_RC_H */

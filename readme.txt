@@ -2,7 +2,10 @@ built against u-boot-xlnx tagged version "xilinx-v2015.2"
 
 make distclean
 
+# for RC board
 make zynq_rc_config
+# for NC boards
+make zynq_nc_config
 
 compile with
 

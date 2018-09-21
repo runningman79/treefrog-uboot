@@ -252,6 +252,7 @@
 
 //	"devicetree_image=devicetree.dtb\0"	
 /* Default environment */
+#if QUASONIX_BOARD_TYPE == 0
 #define CONFIG_EXTRA_ENV_SETTINGS	\
 	"ethaddr=00:0a:35:00:01:22\0"	\
 	"kernel_image=uImage\0"	\
@@ -404,7 +405,131 @@
 		"zynqrsa 0x100000 && " \
 		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
 		DFU_ALT_INFO
+#endif
 
+#if QUASONIX_BOARD_TYPE == 1
+#define CONFIG_EXTRA_ENV_SETTINGS	\
+	"ethaddr=00:0a:35:00:01:22\0"	\
+	"kernel_image=uImage\0"	\
+	"kernel_load_address=0x2080000\0" \
+	"ramdisk_image=uramdisk.image.gz\0"	\
+	"ramdisk_load_address=0x4000000\0"	\
+	"devicetree_load_address=0x2000000\0"	\
+	"bitstream_image=system.bit.bin\0"	\
+	"boot_image=BOOT.bin\0"	\
+	"loadbit_addr=0x100000\0"	\
+	"loadbootenv_addr=0x2000000\0" \
+	"kernel_size=0x500000\0"	\
+	"devicetree_size=0x20000\0"	\
+	"ramdisk_size=0x5E0000\0"	\
+	"boot_size=0xF00000\0"	\
+	"fdt_high=0x20000000\0"	\
+	"initrd_high=0x20000000\0"	\
+	"bootenv=uEnv.txt\0"					  \
+	"loadbootenv=load mmc 0 ${loadbootenv_addr} ${bootenv}\0" \
+	"importbootenv=echo Importing environment from SD ...; " \
+		"env import -t ${loadbootenv_addr} $filesize\0" \
+	"mmc_loadbit=echo Loading bitstream from SD/MMC/eMMC to RAM.. && " \
+		"mmcinfo && " \
+		"load mmc 0 ${loadbit_addr} ${bitstream_image} && " \
+		"fpga load 0 ${loadbit_addr} ${filesize}\0" \
+	"norboot=echo Copying Linux from NOR flash to RAM... && " \
+		"cp.b 0xE2100000 ${kernel_load_address} ${kernel_size} && " \
+		"cp.b 0xE2600000 ${devicetree_load_address} ${devicetree_size} && " \
+		"echo Copying ramdisk... && " \
+		"cp.b 0xE2620000 ${ramdisk_load_address} ${ramdisk_size} && " \
+		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
+	"rdms_init=" \
+        "echo Resetting USB Hub, PHY and ENET PHY... && " \
+            "mw.l 0x43c07000 0x0E0000 && " \
+            "sleep 1 &&" \
+        "echo Releasing USB PHY reset... && " \
+            "mw.l 0x43c07000 0x0C0000 && " \
+            "sleep 1 &&" \
+        "echo Releasing USB HUB, ENET PHY reset... && " \
+            "mw.l 0x43c07000 0x180000 && " \
+            "sleep 1 &&" \
+        "\0" \
+    "env_init=	 echo running env_init... && " \
+                "setenv rack_size unknown && setenv lcd_rev unknown &&  " \
+                "if itest.b *0x2000000 == 1; then setenv rack_size 1; fi; " \
+                "if itest.b *0x2000000 == 2; then setenv rack_size 3; fi; " \
+                "if itest.b *0x2000001 == 1; then setenv lcd_rev 1; fi; " \
+                "if itest.b *0x2000001 == 2; then setenv lcd_rev 2; fi; \0" \
+    "rcboot=     " \
+                "echo Running rcboot... &&" \
+                "fatload mmc ${mmcsel} 0x2300000 uboot_config.bin && " \
+                "source 0x2300000 && " \
+                "echo Copying Linux from SD to RAM... && " \
+                "devicetree_image=devicetree.dtb && " \
+                "fatload mmc ${mmcsel} 0x3000000 ${kernel_image} && " \
+                "fatload mmc ${mmcsel} 0x2A00000 ${devicetree_image} && " \
+                "run rdms_init && " \
+                "echo Booting... &&" \
+                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootmmc} rw earlyprintk ipv6.disable=1 consoleblank=0 rootwait; &&" \
+                "echo   ${bootargs} && " \
+                "bootm 0x3000000 - 0x2A00000" \
+                "\0" \
+    "qspiboot=   echo QSPI boot... && " \
+                "mmcsel=1 && " \
+                "rootmmc=/dev/mmcblk1p2 && " \
+                "run rcboot \0" \
+    "sdboot=     echo SD boot... && " \
+                "mmcsel=0 && " \
+                "rootmmc=/dev/mmcblk0p2 && " \
+                "run rcboot \0" \
+	"uenvboot=" \
+		"if run loadbootenv; then " \
+			"echo Loaded environment from ${bootenv}; " \
+			"run importbootenv; " \
+		"fi; " \
+		"if test -n $uenvcmd; then " \
+			"echo Running uenvcmd ...; " \
+			"run uenvcmd; " \
+		"fi\0" \
+	"usbboot=if usb start; then " \
+			"run uenvboot; " \
+			"echo Copying Linux from USB to RAM... && " \
+			"load usb 0 ${kernel_load_address} ${kernel_image} && " \
+			"load usb 0 ${devicetree_load_address} ${devicetree_image} && " \
+			"load usb 0 ${ramdisk_load_address} ${ramdisk_image} && " \
+			"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}; " \
+		"fi\0" \
+	"nandboot=echo Copying Linux from NAND flash to RAM... && " \
+		"nand read ${kernel_load_address} 0x100000 ${kernel_size} && " \
+		"nand read ${devicetree_load_address} 0x600000 ${devicetree_size} && " \
+		"echo Copying ramdisk... && " \
+		"nand read ${ramdisk_load_address} 0x620000 ${ramdisk_size} && " \
+		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
+	"jtagboot=echo TFTPing Linux to RAM... && " \
+		"tftpboot ${kernel_load_address} ${kernel_image} && " \
+		"tftpboot ${devicetree_load_address} ${devicetree_image} && " \
+		"tftpboot ${ramdisk_load_address} ${ramdisk_image} && " \
+		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
+	"rsa_norboot=echo Copying Image from NOR flash to RAM... && " \
+		"cp.b 0xE2100000 0x100000 ${boot_size} && " \
+		"zynqrsa 0x100000 && " \
+		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
+	"rsa_nandboot=echo Copying Image from NAND flash to RAM... && " \
+		"nand read 0x100000 0x0 ${boot_size} && " \
+		"zynqrsa 0x100000 && " \
+		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
+	"rsa_qspiboot=echo Copying Image from QSPI flash to RAM... && " \
+		"sf probe 0 0 0 && " \
+		"sf read 0x100000 0x0 ${boot_size} && " \
+		"zynqrsa 0x100000 && " \
+		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
+	"rsa_sdboot=echo Copying Image from SD to RAM... && " \
+		"load mmc 0 0x100000 ${boot_image} && " \
+		"zynqrsa 0x100000 && " \
+		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
+	"rsa_jtagboot=echo TFTPing Image to RAM... && " \
+		"tftpboot 0x100000 ${boot_image} && " \
+		"zynqrsa 0x100000 && " \
+		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
+		DFU_ALT_INFO
+#endif
+    
 /* Default environment */
 #define CONFIG_IPADDR	10.10.70.102
 #define CONFIG_SERVERIP	10.10.70.101
