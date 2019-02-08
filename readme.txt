@@ -9,7 +9,12 @@ make zynq_nc_config
 
 compile with
 
+(older tools)
 export CROSS_COMPILE=arm-xilinx-linux-gnueabi-
+
+(newer installs of vivado, put the 2017.3 toolchain somewhere and modify setenv.sh)
+source setenv.sh
+
 
 -----------------------------------------------------------------------------
 Last build was against Xilinx commit 879358544f7aee5d94c37d2a78622a4b783b8198
