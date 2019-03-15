@@ -286,13 +286,13 @@
 		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
 	"rdms_init=" \
         "echo Resetting USB Hub, PHY and ENET PHY... && " \
-            "mw.l 0x83c10000 0x0E0000 && " \
+            "mw.l 0x83c10000 0x07 && " \
             "sleep 1 &&" \
         "echo Releasing USB PHY reset... && " \
-            "mw.l 0x83c10000 0x0C0000 && " \
+            "mw.l 0x83c10000 0x05 && " \
             "sleep 1 &&" \
         "echo Releasing USB HUB, ENET PHY reset... && " \
-            "mw.l 0x83c10000 0x180000 && " \
+            "mw.l 0x83c10000 0x0C && " \
             "sleep 1 &&" \
         "\0" \
     "env_init=	 echo running env_init... && " \
@@ -312,6 +312,8 @@
                 "mw.l 0x83c10004 0x00 && " \
                 "if test ${lcd_rev} = 1; then " \
                     "echo LCD rev.1; " \
+                    "mw.l 0x43c10004 0x0b8; " \
+                    "mw.l 0x43c10008 0x013f00ef; " \
                     "if test ${rack_size} = 3; then " \
                         "mw.l 0x83c10004 0x06; " \
                         "echo 3U; " \
@@ -321,6 +323,8 @@
                     "fi; " \
                 "elif test ${lcd_rev} = 2; then " \
                     "echo LCD rev.2; " \
+	            "mw.l 0x43c10004 0x0d0; " \
+                    "mw.l 0x43c10008 0x013f00ef; " \
                     "if test ${rack_size} = 3; then " \
                         "mw.l 0x83c10004 0x07; " \
                         "echo 3U; " \
