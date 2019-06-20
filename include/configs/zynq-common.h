@@ -323,7 +323,7 @@
                     "fi; " \
                 "elif test ${lcd_rev} = 2; then " \
                     "echo LCD rev.2; " \
-	            "mw.l 0x43c10004 0x0d0; " \
+	            "mw.l 0x43c10004 0x0a0; " \
                     "mw.l 0x43c10008 0x013f00ef; " \
                     "if test ${rack_size} = 3; then " \
                         "mw.l 0x83c10004 0x07; " \
@@ -451,14 +451,11 @@
 		"cp.b 0xE2620000 ${ramdisk_load_address} ${ramdisk_size} && " \
 		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
 	"rdms_init=" \
-        "echo Resetting USB Hub, PHY and ENET PHY... && " \
-            "mw.l 0x83c10000 0x0E0000 && " \
+        "echo Resetting USB PHY and ENET PHY... && " \
+            "mw.l 0x43c00000 0x03 && " \
             "sleep 1 &&" \
-        "echo Releasing USB PHY reset... && " \
-            "mw.l 0x83c10000 0x0C0000 && " \
-            "sleep 1 &&" \
-        "echo Releasing USB HUB, ENET PHY reset... && " \
-            "mw.l 0x83c10000 0x180000 && " \
+        "echo Releasing USB PHY and ENET PHY reset... && " \
+            "mw.l 0x43c00000 0x00 && " \
             "sleep 1 &&" \
         "\0" \
     "env_init=	 echo running env_init... && " \
