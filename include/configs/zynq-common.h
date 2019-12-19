@@ -452,11 +452,13 @@
 		"bootm ${kernel_load_address} ${ramdisk_load_address} ${devicetree_load_address}\0" \
 	"rdms_init=" \
         "echo Resetting USB PHY and ENET PHY... && " \
-            "mw.l 0x43c00000 0x03 && " \
+            "mw.l 0x43c07000 0x060000 && " \
             "sleep 1 &&" \
         "echo Releasing USB PHY and ENET PHY reset... && " \
-            "mw.l 0x43c00000 0x00 && " \
+            "mw.l 0x43c07000 0x000000 && " \
             "sleep 1 &&" \
+        "echo Enabling USB and ENET... && " \
+            "mw.l 0x43c07000 0x180000 && " \
         "\0" \
     "env_init=	 echo running env_init... && " \
                 "setenv rack_size unknown && setenv lcd_rev unknown &&  " \
