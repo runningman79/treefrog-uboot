@@ -286,15 +286,9 @@
 	"rdms_init=" \
         "echo Resetting USB Hub, PHY and ENET PHY... && " \
             "mw.l 0x43c07000 0x0E0000 && " \
-            "echo Set FP to configure from qspi... && "	\
-            "mw.l 0x83C01000 0x0 && "				\
-            "echo Lower FP prog_b... && "					\
-            "mw.l 0x83C01004 0x0 && "                   \
             "sleep 1 &&" \
         "echo Releasing USB PHY reset... && " \
             "mw.l 0x43c07000 0x0C0000 && " \
-            "echo Raise FP prog_b to start configuration... && "	\
-            "mw.l 0x83C01004 0x4 && "					\
             "sleep 1 &&" \
         "echo Releasing ENET PHY reset... && "\
             "mw.l 0x43c07000 0x100000 && "\
@@ -321,6 +315,22 @@
                     "elif strstr 0x2000000 1000 size,3u found_loc; then setenv rack_size 3; fi; " \
                 "if strstr 0x2000000 1000 lcd_rev,1 found_loc; then setenv lcd_rev 1; " \
                     "elif strstr 0x2000000 1000 lcd_rev,2 found_loc; then setenv lcd_rev 2; fi; \0" \
+    "config_fp= " \
+                    "echo Configuring front panel... && " \
+                    "fatload mmc ${mmcsel} 0x3E000000 fp.ace && " \
+                    "echo   -Set up fp_programmer && " \
+                    "mw.l 0x83c50014 0xE4 && " \
+                    "mw.l 0x83c50000 0x3 && " \
+                    "mw.l 0x83c50004 0x0 && " \
+                    "mw.l 0x83c50004 0x4 && " \
+                    "mw.l 0x83c50018 0x2 && " \
+                    "mw.l 0x83c50018 0x3 && " \
+                    "echo   -Starting DMA to fp_programmer && " \
+                    "mw.l 0x80400000 0x4 && " \
+                    "mw.l 0x80400000 0x0 && " \
+                    "mw.l 0x80400018 0x3E000000 && " \
+                    "mw.l 0x80400000 0xF001 && " \
+                    "mw.l 0x80400028 0x0800000 \0" \
     "rcboot=     " \
                 "echo Running rcboot... && " \
                 "echo Reading unit.txt... && " \
@@ -360,6 +370,7 @@
                         "echo 1U; " \
                     "fi; " \
                 "fi;  && "  \
+                "run config_fp; " \
                 "fatload mmc ${mmcsel} 0x2300000 uboot_config.bin && " \
                 "source 0x2300000 && " \
                 "if test -e mmc ${mmcsel} BOOTING1; then " \
@@ -397,7 +408,7 @@
                 "fatload mmc ${mmcsel} 0x2A00000 ${devicetree_image} && " \
                 "run rdms_init && " \
                 "echo Booting... && " \
-                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootfs} rw earlyprintk ipv6.disable=1 consoleblank=0 panic=5 rootwait; &&" \
+                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootfs} rw earlyprintk ipv6.disable=1 consoleblank=0 panic=5 rootwait mem=900M; &&" \
                 "echo   ${bootargs} && " \
                 "bootm 0x3000000 - 0x2A00000" \
                 "\0" \
