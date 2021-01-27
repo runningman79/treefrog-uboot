@@ -286,15 +286,19 @@
 	"rdms_init=" \
         "echo Resetting USB Hub, PHY and ENET PHY... && " \
             "mw.l 0x43c07000 0x0E0000 && " \
-            "echo Set FP to configure from qspi... && "	\
-            "mw.l 0x83C01000 0x0 && "				\
-            "echo Lower FP prog_b... && "					\
-            "mw.l 0x83C01004 0x0 && "                   \
+            "if test ${rack_size} != 'crc'; then " \
+                "echo Set FP to configure from qspi... && "	\
+                "mw.l 0x83C01000 0x0 && "				\
+                "echo Lower FP prog_b... && "					\
+                "mw.l 0x83C01004 0x0; "\
+            "fi; " \
             "sleep 1 &&" \
         "echo Releasing USB PHY reset... && " \
             "mw.l 0x43c07000 0x0C0000 && " \
-            "echo Raise FP prog_b to start configuration... && "	\
-            "mw.l 0x83C01004 0x4 && "					\
+            "if test ${rack_size} != 'crc'; then " \
+                "echo Raise FP prog_b to start configuration... && "	\
+                "mw.l 0x83C01004 0x4; "					\
+            "fi; "\
             "sleep 1 &&" \
         "echo Releasing ENET PHY reset... && "\
             "mw.l 0x43c07000 0x100000 && "\
@@ -318,14 +322,18 @@
             "sleep 1; \0" \
     "unit_init=	 echo running unit_init... && " \
                 "if strstr 0x2000000 1000 size,1u found_loc; then setenv rack_size 1; " \
-                    "elif strstr 0x2000000 1000 size,3u found_loc; then setenv rack_size 3; fi; " \
+                    "elif strstr 0x2000000 1000 size,3u found_loc; then setenv rack_size 3; " \
+                    "elif strstr 0x2000000 1000 size,crc found_loc; then setenv rack_size crc; " \
+                "fi; " \
                 "if strstr 0x2000000 1000 lcd_rev,1 found_loc; then setenv lcd_rev 1; " \
-                    "elif strstr 0x2000000 1000 lcd_rev,2 found_loc; then setenv lcd_rev 2; fi; \0" \
+                    "elif strstr 0x2000000 1000 lcd_rev,2 found_loc; then setenv lcd_rev 2; " \
+                "fi; \0" \
     "rcboot=     " \
                 "echo Running rcboot... && " \
                 "echo Reading unit.txt... && " \
-                "mw.b 0x2000000 0 1000; "\
-                "setenv rack_size unknown; setenv lcd_rev unknown; " \
+                "mw.b 0x2000000 0 1000; " \
+                "setenv rack_size unknown; " \
+                "setenv lcd_rev unknown; " \
                 "if ext4load mmc 1:6 0x2000000 unit.txt; then " \
                     "echo Found unit.txt in 1:6 ... && " \
                     "run unit_init; " \
@@ -340,26 +348,28 @@
                     "run unit_init; " \
                 "fi; " \
                 "echo found size ${rack_size}, rev ${lcd_rev} && " \
-                "mw.l 0x43c07004 0x00 && " \
-                "if test ${lcd_rev} = 2; then " \
-                    "echo LCD rev.2; " \
-                    "if test ${rack_size} = 3; then " \
-                        "mw.l 0x43c07004 0x07; " \
-                        "echo 3U; " \
+                "if test ${rack_size} != 'crc'; then " \
+                    "mw.l 0x43c07004 0x00 && " \
+                    "if test ${lcd_rev} = 2; then " \
+                        "echo LCD rev.2; " \
+                        "if test ${rack_size} = 3; then " \
+                            "mw.l 0x43c07004 0x07; " \
+                            "echo 3U; " \
+                        "else " \
+                            "mw.l 0x43c07004 0x05; " \
+                            "echo 1U; " \
+                        "fi; " \
                     "else " \
-                        "mw.l 0x43c07004 0x05; " \
-                        "echo 1U; " \
-                    "fi; " \
-                "else " \
-                    "echo LCD rev.1; " \
-                    "if test ${rack_size} = 3; then " \
-                        "mw.l 0x43c07004 0x06; " \
-                        "echo 3U; " \
-                    "else " \
-                        "mw.l 0x43c07004 0x04; " \
-                        "echo 1U; " \
-                    "fi; " \
-                "fi;  && "  \
+                        "echo LCD rev.1; " \
+                        "if test ${rack_size} = 3; then " \
+                            "mw.l 0x43c07004 0x06; " \
+                            "echo 3U; " \
+                        "else " \
+                            "mw.l 0x43c07004 0x04; " \
+                            "echo 1U; " \
+                        "fi; " \
+                    "fi; "    \
+                "fi; " \
                 "fatload mmc ${mmcsel} 0x2300000 uboot_config.bin && " \
                 "source 0x2300000 && " \
                 "if test -e mmc ${mmcsel} BOOTING1; then " \
@@ -367,12 +377,14 @@
                     "setenv rootfs ${rootmmc}p2; " \
                     "setenv devtree_image_1u devicetree.dtb.1u.1; " \
                     "setenv devtree_image_3u devicetree.dtb.3u.1; " \
+                    "setenv devtree_crc crc.dtb.1; " \
                     "setenv kernel_image uImage.1; " \
                 "elif test -e mmc ${mmcsel} BOOTING2; then " \
                     "echo Found BOOTING2; " \
                     "setenv rootfs ${rootmmc}p3; " \
                     "setenv devtree_image_1u devicetree.dtb.1u.2; " \
                     "setenv devtree_image_3u devicetree.dtb.3u.2; " \
+                    "setenv devtree_crc crc.dtb.2; " \
                     "setenv kernel_image uImage.2; " \
                 "else " \
                     "echo Found no BOOTING1 or BOOTING2; " \
@@ -381,31 +393,39 @@
                         "setenv rootfs ${rootmmc}p2; " \
                         "setenv devtree_image_1u devicetree.dtb.1u.1; " \
                         "setenv devtree_image_3u devicetree.dtb.3u.1; " \
+                        "setenv devtree_crc crc.dtb.1; " \
                         "setenv kernel_image uImage.1; " \
                     "else " \
                         "echo Booted internal, go to recovery; " \
                         "setenv rootfs ${rootmmc}p5; " \
                         "setenv devtree_image_1u devicetree.dtb.1u.3; " \
                         "setenv devtree_image_3u devicetree.dtb.3u.3; " \
+                        "setenv devtree_crc crc.dtb.3; " \
                         "setenv kernel_image uImage.3; " \
                     "fi; " \
-                "fi; && " \
+                "fi; " \
                 "echo Copying Linux from SD to RAM... && " \
-                "if test ${rack_size} = 1; then setenv devicetree_image ${devtree_image_1u}; else setenv devicetree_image ${devtree_image_3u}; fi; && " \
+                "if test ${rack_size} = 1; then " \
+                    "setenv devicetree_image ${devtree_image_1u}; " \
+                "elif test ${rack_size} = 3; then " \
+                    "setenv devicetree_image ${devtree_image_3u}; " \
+                "elif test ${rack_size} = 'crc'; then " \
+                    "setenv devicetree_image ${devtree_crc}; " \
+                "fi; " \
                 "echo Using ${devicetree_image} and ${kernel_image} && " \
                 "fatload mmc ${mmcsel} 0x3000000 ${kernel_image} && " \
                 "fatload mmc ${mmcsel} 0x2A00000 ${devicetree_image} && " \
                 "run rdms_init && " \
                 "echo Booting... && " \
-                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootfs} rw earlyprintk ipv6.disable=1 consoleblank=0 panic=5 rootwait; &&" \
+                "setenv bootargs console=tty0 console=ttyPS0,115200 root=${rootfs} rw earlyprintk ipv6.disable=1 consoleblank=0 panic=5 rootwait; && " \
                 "echo   ${bootargs} && " \
                 "bootm 0x3000000 - 0x2A00000" \
                 "\0" \
-    "qspiboot=   echo QSPI boot 2018/03/29 ... && " \
+    "qspiboot=   echo QSPI boot 2021/01/26 ... && " \
                 "setenv mmcsel 1 && " \
                 "setenv rootmmc /dev/mmcblk1 && " \
                 "run rcboot \0" \
-    "sdboot=     echo SD boot 2018/03/29 ... && " \
+    "sdboot=     echo SD boot 2021/01/26 ... && " \
                 "setenv mmcsel 0 && " \
                 "setenv rootmmc /dev/mmcblk0 && " \
                 "sf probe 0; " \
